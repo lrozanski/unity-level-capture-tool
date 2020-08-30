@@ -67,6 +67,7 @@ namespace LevelCaptureTool {
 
         private void ClearTexture() {
             if (renderTexture != null) {
+                RenderTexture.active = null;
                 renderTexture.Release();
             }
         }
@@ -207,11 +208,13 @@ namespace LevelCaptureTool {
                 renderTexture.height
             );
             var pixelBounds = new RectInt(
-                (int) (texturePixelRect.width / 2f - Mathf.Abs(bounds.size.x * pixelsPerUnit / 2f)),
-                (int) (texturePixelRect.height / 2f - Mathf.Abs(bounds.size.y * pixelsPerUnit / 2f)),
-                (int) (bounds.size.x * pixelsPerUnit),
-                (int) (bounds.size.y * pixelsPerUnit)
+                (int) (texturePixelRect.width / 2f - Mathf.Abs((bounds.size.x + margin) * pixelsPerUnit / 2f)),
+                (int) (texturePixelRect.height / 2f - Mathf.Abs((bounds.size.y + margin) * pixelsPerUnit / 2f)),
+                (int) ((bounds.size.x + margin) * pixelsPerUnit),
+                (int) ((bounds.size.y + margin) * pixelsPerUnit)
             );
+            Debug.Log(texturePixelRect);
+            Debug.Log(pixelBounds);
             var borderRects = new[] {
                 new RectInt(0, 0, pixelBounds.xMin, texturePixelRect.height),
                 new RectInt(pixelBounds.xMin, pixelBounds.yMax, pixelBounds.width, texturePixelRect.height - pixelBounds.yMax),
