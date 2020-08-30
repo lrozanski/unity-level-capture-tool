@@ -213,8 +213,6 @@ namespace LevelCaptureTool {
                 (int) ((bounds.size.x + margin) * pixelsPerUnit),
                 (int) ((bounds.size.y + margin) * pixelsPerUnit)
             );
-            Debug.Log(texturePixelRect);
-            Debug.Log(pixelBounds);
             var borderRects = new[] {
                 new RectInt(0, 0, pixelBounds.xMin, texturePixelRect.height),
                 new RectInt(pixelBounds.xMin, pixelBounds.yMax, pixelBounds.width, texturePixelRect.height - pixelBounds.yMax),
