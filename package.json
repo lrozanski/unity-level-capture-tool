@@ -1,0 +1,20 @@
+﻿{
+  "name": "com.lrozanski.unity-capture-tool",
+  "version": "1.0.0",
+  "displayName": "Level Capture Tool",
+  "description": "A tool to quickly render parts of the level into an image with the specified pixels per unit",
+  "keywords": [
+    "design",
+    "designer",
+    "artist",
+    "level",
+    "sprite",
+    "capture",
+    "save"
+  ],
+  "author": {
+    "name": "Lech Różański",
+    "email": "l.rozanski88@gmail.com",
+    "url": "https://github.com/lrozanski"
+  }
+}
