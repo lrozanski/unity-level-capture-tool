@@ -2,7 +2,7 @@
   "name": "com.lrozanski.unity-capture-tool",
   "version": "1.0.1",
   "displayName": "Level Capture Tool",
-  "description": "A tool to quickly render parts of the level into an image with the specified pixels per unit",
+  "description": "https://github.com/lrozanski/unity-level-capture-tool\n\nA tool to quickly render parts of the level into an image with the specified pixels per unit",
   "keywords": [
     "design",
     "designer",
