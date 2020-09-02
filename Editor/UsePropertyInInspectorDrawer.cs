@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
-namespace LevelCaptureTool.Editor {
+namespace LevelCaptureTool {
 
     [CustomPropertyDrawer(typeof(UsePropertyInInspector))]
     public class UsePropertyInInspectorDrawer : PropertyDrawer {

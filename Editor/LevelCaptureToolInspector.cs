@@ -3,10 +3,10 @@ using UnityEditor;
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
-namespace LevelCaptureTool.Editor {
+namespace LevelCaptureTool {
 
     [CustomEditor(typeof(LevelCaptureTool))]
-    public class LevelCaptureToolInspector : UnityEditor.Editor {
+    public class LevelCaptureToolInspector : Editor {
 
         private const int ActionBoxPadding = 5;
 
