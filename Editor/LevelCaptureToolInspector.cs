@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -129,14 +130,14 @@ namespace LevelCaptureTool {
             }
             if (_toggleStyle == null) {
                 _toggleStyle = new GUIStyle(GUI.skin.button) {
-                    active = {textColor = ToggleTextColor},
-                    hover = {textColor = ToggleTextColor},
-                    normal = {textColor = ToggleTextColor},
-                    focused = {textColor = ToggleTextColor},
-                    onActive = {textColor = ToggleTextColor},
-                    onHover = {textColor = ToggleTextColor},
-                    onNormal = {textColor = ToggleTextColor},
-                    onFocused = {textColor = ToggleTextColor}
+                    active = { textColor = ToggleTextColor },
+                    hover = { textColor = ToggleTextColor },
+                    normal = { textColor = ToggleTextColor },
+                    focused = { textColor = ToggleTextColor },
+                    onActive = { textColor = ToggleTextColor },
+                    onHover = { textColor = ToggleTextColor },
+                    onNormal = { textColor = ToggleTextColor },
+                    onFocused = { textColor = ToggleTextColor }
                 };
             }
             EditorGUI.BeginChangeCheck();
@@ -185,7 +186,7 @@ namespace LevelCaptureTool {
             _selectionMode = GUILayout.Toggle(_selectionMode, freeformButtonContent, _toggleStyle, GUILayout.Width(90f), GUILayout.Height(24f));
             GUI.backgroundColor = Color.white;
 
-            var instance = ((LevelCaptureTool) serializedObject.targetObject);
+            var instance = ((LevelCaptureTool)serializedObject.targetObject);
             EditorGUI.BeginChangeCheck();
             if (GUILayout.Button("Trim Bounds", GUILayout.Height(24f))) {
                 instance.TrimBounds();
@@ -196,7 +197,7 @@ namespace LevelCaptureTool {
                 GUIUtility.ExitGUI();
             }
             if (GUILayout.Button("Capture", GUILayout.Height(24f))) {
-                instance.Capture();
+                Capture();
                 GUIUtility.ExitGUI();
             }
             if (EditorGUI.EndChangeCheck()) {
@@ -205,6 +206,31 @@ namespace LevelCaptureTool {
 
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
+        }
+
+        private void Capture() {
+            var instance = ((LevelCaptureTool)serializedObject.targetObject);
+            var path = EditorUtility.SaveFilePanelInProject("Save captured level part", "", "png", "");
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
+
+            var layerNames = new List<string>();
+            for (var i = 0; i < 32; i++) {
+                if (instance.layerMask != (instance.layerMask | (1 << i))) {
+                    continue;
+                }
+                var layerName = LayerMask.LayerToName(i);
+                if (string.IsNullOrEmpty(layerName)) {
+                    continue;
+                }
+                layerNames.Add(LayerMask.LayerToName(i));
+            }
+            if (instance.saveLayersSeparately) {
+                layerNames.ForEach(layerName => EditorCoroutineUtility.StartCoroutine(instance.SaveLayerMask(path, true, layerName), instance));
+            } else {
+                EditorCoroutineUtility.StartCoroutine(instance.SaveLayerMask(path, false, layerNames.ToArray()), instance);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -40,7 +41,7 @@ namespace LevelCaptureTool {
         private int pixelsPerUnit;
 
         [SerializeField]
-        private LayerMask layerMask = default;
+        public LayerMask layerMask = default;
 
         [SerializeField, UsePropertyInInspector(nameof(Size))]
         private Vector2 size;
@@ -54,7 +55,7 @@ namespace LevelCaptureTool {
         public bool drawGizmos = true;
 
         [SerializeField]
-        private bool saveLayersSeparately = default;
+        public bool saveLayersSeparately = default;
 
         private Camera _camera;
         private Bounds _bounds;
@@ -135,12 +136,12 @@ namespace LevelCaptureTool {
             UpdateZPosition();
 
             var maxSize = Mathf.Max(_bounds.size.x + margin, _bounds.size.y + margin) * pixelsPerUnit;
-            var textureSize = CeilPower2((int) maxSize);
+            var textureSize = CeilPower2((int)maxSize);
             renderTexture = new RenderTexture(textureSize, textureSize, 0, RenderTextureFormat.Default, 0);
 
             _camera = GetComponent<Camera>();
             _camera.aspect = 1f;
-            _camera.orthographicSize = textureSize / (float) pixelsPerUnit / 2f;
+            _camera.orthographicSize = textureSize / (float)pixelsPerUnit / 2f;
             _camera.targetTexture = renderTexture;
         }
 
@@ -162,43 +163,72 @@ namespace LevelCaptureTool {
                 layerNames.Add(LayerMask.LayerToName(i));
             }
             if (saveLayersSeparately) {
-                layerNames.ForEach(layerName => SaveLayerMask(path, true, layerName));
+                layerNames.ForEach(layerName => StartCoroutine(SaveLayerMask(path, true, layerName)));
             } else {
-                SaveLayerMask(path, false, layerNames.ToArray());
+                StartCoroutine(SaveLayerMask(path, false, layerNames.ToArray()));
             }
         }
 
-        private void SaveLayerMask(string path, bool appendLayerNames, params string[] layerNames) {
+        public IEnumerator SaveLayerMask(string path, bool appendLayerNames, params string[] layerNames) {
+            var progressId = Progress.Start("Saving layers", $"{string.Join(",", layerNames)}");
             Debug.Log($"Capturing layers: {string.Join(", ", layerNames)}");
             UpdateCamera();
+            yield return null;
 
             var cameraMask = _camera.cullingMask;
             _camera.cullingMask = LayerMask.GetMask(layerNames);
             _camera.Render();
             _camera.cullingMask = cameraMask;
+            yield return null;
 
             var active = RenderTexture.active;
             RenderTexture.active = renderTexture;
 
             var texture = new Texture2D(renderTexture.width, renderTexture.height, renderTexture.graphicsFormat, 0, TextureCreationFlags.None);
             texture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0, false);
+            yield return null;
 
             IncludeOnlyBounds(texture, _bounds);
+            yield return null;
 
             texture.Apply();
             RenderTexture.active = active;
+            yield return null;
 
+            var pngBytes = texture.EncodeToPNG();
+            yield return null;
+
+            AssetDatabase.DisallowAutoRefresh();
             if (appendLayerNames) {
                 var extensionIndex = path.LastIndexOf(".", StringComparison.Ordinal);
                 var extension = path.Substring(extensionIndex + 1);
                 var pathWithoutExtension = path.Substring(0, extensionIndex);
-                var newPath = $"{pathWithoutExtension}_{string.Join("_", layerNames)}.{extension}";
+                var layerPath = $"{pathWithoutExtension}_{string.Join("_", layerNames)}.{extension}";
 
-                File.WriteAllBytes(newPath, texture.EncodeToPNG());
+                using var file = File.OpenWrite(layerPath);
+                for (var i = 0; i < pngBytes.Length; i++) {
+                    if (i % 4096 == 0) {
+                        Progress.Report(progressId, i / (float)pngBytes.Length);
+                        yield return null;
+                    }
+                    file.WriteByte(pngBytes[i]);
+                }
+                yield return null;
             } else {
-                File.WriteAllBytes(path, texture.EncodeToPNG());
+                using var file = File.OpenWrite(path);
+                for (var i = 0; i < pngBytes.Length; i++) {
+                    if (i % 4096 == 0) {
+                        Progress.Report(progressId, i / (float)pngBytes.Length);
+                        yield return null;
+                    }
+                    file.WriteByte(pngBytes[i]);
+                }
+                yield return null;
             }
             ClearTexture();
+            yield return null;
+            Progress.Remove(progressId);
+            AssetDatabase.AllowAutoRefresh();
         }
 
         private void IncludeOnlyBounds(Texture2D texture, Bounds bounds) {
@@ -209,10 +239,10 @@ namespace LevelCaptureTool {
                 renderTexture.height
             );
             var pixelBounds = new RectInt(
-                (int) (texturePixelRect.width / 2f - Mathf.Abs((bounds.size.x + margin) * pixelsPerUnit / 2f)),
-                (int) (texturePixelRect.height / 2f - Mathf.Abs((bounds.size.y + margin) * pixelsPerUnit / 2f)),
-                (int) ((bounds.size.x + margin) * pixelsPerUnit),
-                (int) ((bounds.size.y + margin) * pixelsPerUnit)
+                (int)(texturePixelRect.width / 2f - Mathf.Abs((bounds.size.x + margin) * pixelsPerUnit / 2f)),
+                (int)(texturePixelRect.height / 2f - Mathf.Abs((bounds.size.y + margin) * pixelsPerUnit / 2f)),
+                (int)((bounds.size.x + margin) * pixelsPerUnit),
+                (int)((bounds.size.y + margin) * pixelsPerUnit)
             );
             var borderRects = new[] {
                 new RectInt(0, 0, pixelBounds.xMin, texturePixelRect.height),
@@ -239,7 +269,7 @@ namespace LevelCaptureTool {
                 return 1;
             }
 
-            return (int) Math.Pow(2, (int) Math.Log(x - 1, 2) + 1);
+            return (int)Math.Pow(2, (int)Math.Log(x - 1, 2) + 1);
         }
 
         private void OnDrawGizmosSelected() {
